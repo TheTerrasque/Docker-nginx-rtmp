@@ -7,6 +7,8 @@ RTMP_CONNECTIONS=${RTMP_CONNECTIONS-1024}
 RTMP_STREAM_NAMES=${RTMP_STREAM_NAMES-live,testing}
 RTMP_STREAMS=$(echo ${RTMP_STREAM_NAMES} | sed "s/,/\n/g")
 RTMP_PUSH_URLS=$(echo ${RTMP_PUSH_URLS} | sed "s/,/\n/g")
+HLS_FRAGMENT=${HLS_FRAGMENT-5s}
+HLS_PLAYLIST_LENGTH=${HLS_PLAYLIST_LENGTH-16s}
 
 apply_config() {
 
@@ -32,6 +34,7 @@ http {
     server {
         listen          8080;
         server_name     localhost;
+        root /opt/nginx/html;
 
         location /hls {
             types {
@@ -40,7 +43,9 @@ http {
             }
             root /tmp;
             add_header  Cache-Control no-cache;
-            add_header  Access-Control-Allow-Origin *;
+         
+            add_header 'Access-Control-Allow-Origin' '*' always;
+            add_header 'Access-Control-Expose-Headers' 'Content-Length';
         }
 
         location /on_publish {
@@ -97,8 +102,9 @@ if [ "${HLS}" = "true" ]; then
 cat >>${NGINX_CONFIG_FILE} <<!EOF
             hls on;
             hls_path /tmp/hls;
-            hls_fragment    1;
-            hls_playlist_length     20;
+            hls_fragment     ${HLS_FRAGMENT};
+            hls_playlist_length     ${HLS_PLAYLIST_LENGTH};
+            deny play all;
 !EOF
     HLS="false"
 fi
@@ -128,6 +134,5 @@ else
     echo "CONFIG EXISTS - Not creating!"
 fi
 
-echo "Starting server
+echo "Starting server"
 /opt/nginx/sbin/nginx -g "daemon off;"
-

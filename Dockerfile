@@ -60,9 +60,10 @@ COPY --from=0 /opt/nginx /opt/nginx
 COPY --from=0 /tmp/nginx-rtmp-module/stat.xsl /opt/nginx/conf/stat.xsl
 RUN rm /opt/nginx/conf/nginx.conf
 ADD run.sh /
+ADD index.html /opt/nginx/html/video.html
 
 EXPOSE 1935
 EXPOSE 8080
 
-CMD /run.sh
+CMD sh /run.sh
 
